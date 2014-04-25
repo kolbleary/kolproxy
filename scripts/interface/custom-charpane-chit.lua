@@ -698,6 +698,31 @@ function charpane_bleary_js()
 	});
 		})
 	</script>
+
+]]
+end
+
+local function iframe_js()
+if not setting_enabled("use iframes instead of frames") then return end
+return [[<script type="text/javascript">
+
+function poop(url, h, w)
+{
+window.parent.$('#popup #hidden').attr("src", url);
+	window.parent.$('#popup').dialog(
+      {
+       width: w,
+       height: h,
+       modal: false, 
+       hide: { effect: "puff", duration: 500},
+       open: function(event, ui) {window.parent.setTimeout(event.delegateTarget.close, 3500)},
+       }
+     )
+}
+function popup_effect(descid) {
+			poop("desc_effect.php?whicheffect=" + descid, 400,400);
+		};
+	</script>
 ]]
 end
 
@@ -1744,7 +1769,7 @@ add_interceptor("/charpane.php", function()
 
 ]] .. charpane_bleary_js() .. [[
 
-]] .. extra_js .. [[
+]] .. extra_js .. iframe_js() ..[[
 
 </head>
 <body>
