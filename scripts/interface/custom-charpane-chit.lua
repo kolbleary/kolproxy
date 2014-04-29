@@ -553,7 +553,7 @@ function bl_charpane_buff_lines(lines)
 			strarrow = make_strarrow(x.upeffect)
 		end
 
-		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
+		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" data-effectid='%s' title="%s" class='effect_icon' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
 		table.insert(bufflines, str)
 	end
 
@@ -580,7 +580,10 @@ end
 
 function charpane_bleary_js()
 	return [[
+
 <script type="text/javascript">
+
+
 //Resize window
 	$(window).resize(function() {
 		var pad = 5
@@ -648,28 +651,28 @@ function charpane_bleary_js()
 		}
 	return false
 	});
-	$(".chit_picker a.change").live("click", function(e) {
+	$(document).on("click", ".chit_picker a.change", function(e) {
 		$(this).closest(".chit_picker").find("tr.pickloader").show();
 		$(this).closest(".chit_picker").find("tr.pickitem").hide();
 		$(this).closest(".chit_picker").find("tr.florist").hide();
 	});
-	$(".chit_picker a.done").live("click", function(e) {
+	$(document).on("click", ".chit_picker a.done", function(e) {
 		$(this).closest(".chit_skeleton").hide();
 	});
-	$(".chit_picker tr.picknone").live("click", function(e) {
+	$(document).on("click", ".chit_picker tr.picknone", function(e) {
 		$(this).closest(".chit_skeleton").hide();
 	});
-	$(".chit_picker th").live("click", function(e) {
+	$(document).on("click", ".chit_picker th", function(e) {
 		$(this).closest(".chit_skeleton").hide();
 	});
-	$(".chit_skeleton").live("click", function(e) {
+	$(document).on("click", ".chit_skeleton", function(e) {
 		e.stopPropagation();
 	});
-	$(document).live("click", function(e) {
+	$(document).on("click", document, function(e) {
 		$(".chit_skeleton").hide();
 	});
 //Tool Launchers
-	$(".tool_launcher").live("click", function(e) {
+	$(document).on("click",".tool_launcher", function(e) {
 		var caller = $(this);
 		var bottom = $("#chit_toolbar").outerHeight() + 4 - 1;
 		var tool = $("#chit_tool" + caller.attr("rel"));
@@ -689,15 +692,15 @@ function charpane_bleary_js()
 		}
 	return false;
 	});
-	$("div.chit_skeleton table.chit_brick th").live("click", function(e) {
+	$(document).on("click", "div.chit_skeleton table.chit_brick th", function(e) {
 		$(this).closest("div.chit_skeleton").hide();
 		e.stopPropagation();
 	});
-	$("div.chit_skeleton table.chit_brick th a").live("click", function(e) {
+	$(document).on("click", "div.chit_skeleton table.chit_brick th a", function(e) {
 		e.stopPropagation();
 	});
 		})
-	</script>
+</script>
 
 ]]
 end
@@ -706,22 +709,9 @@ local function iframe_js()
 if not setting_enabled("use iframes instead of frames") then return end
 return [[<script type="text/javascript">
 
-function poop(url, h, w)
-{
-window.parent.$('#popup #hidden').attr("src", url);
-	window.parent.$('#popup').dialog(
-      {
-       width: w,
-       height: h,
-       modal: false, 
-       hide: { effect: "puff", duration: 500},
-       open: function(event, ui) {window.parent.setTimeout(event.delegateTarget.close, 3500)},
-       }
-     )
-}
-function popup_effect(descid) {
-			poop("desc_effect.php?whicheffect=" + descid, 400,400);
-		};
+$(document).on('click', '.effect_icon', function(e) {
+     poop("desc_effect.php?whicheffect=" + $(this).data('effectid'),"",ev.pageY - $("body").scrollTop(),e.pageX+15);
+		});
 	</script>
 ]]
 end

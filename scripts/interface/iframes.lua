@@ -7,6 +7,30 @@ register_setting {
 	beta_version = true,
 }
 
+add_printer("all pages", function()
+	local iframes_js = [[
+function descitem(url,otherplayer,ev)
+{
+	evt = ev || window.event;
+	if (evt && evt.shiftKey) return true;
+	if (otherplayer) { oplay = '&otherplayer=' + otherplayer; }
+	else { oplay = ''; }
+	if (url)
+		poop("desc_item.php?whichitem=" + url + oplay, "", ev.pageY - $("body").scrollTop(), ev.pageX);
+};
+function poop(url, name, y, x, misc)
+{
+var popup = window.parent.$("#popup");
+     popup.css({'top':y+15,'left':x+15,'position':'absolute','padding':'5px'}).fadeIn('fast').delay( 3800 ).fadeOut( 'fast' );
+     
+     window.parent.$("#popup > iframe").attr("src",url);
+
+		};
+]]
+	text = text:gsub("</head>", [[<script type="text/javascript">]] .. iframes_js .. [[</script></head>]])
+
+end)
+
 add_interceptor("/game.php", function()
 	if not setting_enabled("use iframes instead of frames") then return end
 return [[
@@ -22,7 +46,7 @@ return [[
 
 </script><script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/overcast/jquery-ui.css">
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/overcast/jquery-ui.css">
 <style type="text/css">
 
   body {
@@ -63,13 +87,28 @@ flex: 3;
 order: 2;
   }
 
-  #chatpane {
+  #xchatpane {
   -webkit-flex: 1;
   flex: 1;
   order: 3;
   -webkit-order: 3;
   }
-
+  
+#chatwrap {
+  z-index: 3;
+ opacity: 0.8;
+ padding: 5px;
+ border: 1px solid black;
+position: absolute;
+right: 0px;
+top: 50px;
+width: 20%;
+height: 90%;
+}
+#chatpane {
+width: 100%;
+height: 100%;
+}
   #popup
 { display: none;
 opacity: 0.9;
@@ -77,14 +116,32 @@ opacity: 0.9;
 }
 
 #hidden {width: 100%;
-height: 95%;  };
+height: 95%;  }
 
 .ui_dialog { opacity: 0.9;}
+
 .ui-dialog .ui-dialog-titlebar
 {padding: 0;}
+
  .ui-widget-content {
     background: #C9C9C9;
 } </style>
+ <script>
+$(document).ready(function() {
+  // adjust popup iframe size to reflect contents, once it loads
+  $("#popup > iframe").load(function(){$(this).height( $(this).contents().find("html").outerHeight() ); });
+  $("#popup").draggable({containment: "window"});
+  
+  // make the chat panel fancy
+  $( "#chatwrap" ).resizable().draggable({ iframeFix: true, opacity: 0.35, containment:"window" });
+  //$("#chatwrap > iframe").load(function(){
+  //   $("#chatwrap > iframe").contents().find("#tabs .tab.active).bind("click", function(e) {
+  //      $("#chatwrap").height($("#chatwrap > iframe").contents().find("#tabs").height())
+  //   });
+  //});
+});
+</script>
+
 </head>
 
 <body>
@@ -99,10 +156,12 @@ height: 95%;  };
       <iframe src="main.php" name="mainpane" id="mainpane">
         mainpane
       </iframe>
-    <iframe src="chatlaunch.php" id="chatpane" name="chatpane">
-      chatpane
-    </iframe>
+    
   </div> <!-- end wrapper -->
+<div id="chatwrap">
+<iframe src="chatlaunch.php" id="chatpane" name="chatpane">
+      chatpane
+    </iframe></div><!-- end chatwrap -->
 <div id="popup"><iframe id="hidden"></iframe></div>
 
 </body>
