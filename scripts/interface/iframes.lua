@@ -8,25 +8,71 @@ register_setting {
 }
 
 add_printer("all pages", function()
+	if not setting_enabled("use iframes instead of frames") then return end
+	-- these replace javascript functions defined by KoL in /scripts/window.20111231.js
+	-- adding an event argument, so we can get the click position and place the div
 	local iframes_js = [[
-function descitem(url,otherplayer,ev)
+function doc(event, url)
 {
-	evt = ev || window.event;
+	if (url)
+		poop(event, "doc.php?topic=" + url, "documentation", 350, 300, "scrollbars=yes,resizable=yes");
+}
+function eff(event, url)
+{
+	if (url)
+		poop(event, "desc_effect.php?whicheffect=" + url, "effect", 200, 400);
+}
+function item(url)
+{
+	if (url)
+		poop(event, "desc_item.php?whichitem=" + url, "", 200, 400);
+}
+function descitem(event, url,otherplayer,ev)
+{
+	evt = event || ev || window.event;
 	if (evt && evt.shiftKey) return true;
 	if (otherplayer) { oplay = '&otherplayer=' + otherplayer; }
 	else { oplay = ''; }
 	if (url)
-		poop("desc_item.php?whichitem=" + url + oplay, "", ev.pageY - $("body").scrollTop(), ev.pageX);
-};
-function poop(url, name, y, x, misc)
+		poop(evt,"desc_item.php?whichitem=" + url + oplay, "", 200, 400);
+}
+function skill(event, url)
+{
+	if (url)
+		poop(event, "desc_skill.php?whichskill=" + url, "skill", 350, 400);
+}
+function fam(event, url)
+{
+	if (url)
+		poop(event, "desc_familiar.php?which=" + url, "familiar", 200, 400);
+}
+function search(event, url)
+{
+	poop(event, "searchplayer.php", "", 350, 500, "scrollbars=yes");
+}
+
+function describe(event, select)
+{
+   var selected = select.options[select.selectedIndex];
+   descitem(event, selected.getAttribute('descid'),'',event);
+}
+function poop(event, url, name, y, x, misc)
 {
 var popup = window.parent.$("#popup");
-     popup.css({'top':y+15,'left':x+15,'position':'absolute','padding':'5px'}).fadeIn('fast').delay( 3800 ).fadeOut( 'fast' );
+     popup.css({'top':event.pageY - $("body").scrollTop() + 15,'left':event.pageX,'width':x + 'px', 'height':y + 'px','position':'absolute','padding':'5px'}).fadeIn('fast').delay( 3800 ).fadeOut( 'fast' );
      
      window.parent.$("#popup > iframe").attr("src",url);
 
 		};
 ]]
+	-- replace all the javascript calls with new calls
+	-- this is probably not an exhaustive list
+	text = text:gsub("javascript:poop%(","%0event,")
+	text = text:gsub("javascript:skill%(","%0event,")
+	text = text:gsub("onClick='descitem%(","%0event,")
+	text = text:gsub("onClick='eff%(","%0event,")
+	text = text:gsub("onClick='skill%(","%0event,")
+	-- add the new js 
 	text = text:gsub("</head>", [[<script type="text/javascript">]] .. iframes_js .. [[</script></head>]])
 
 end)
